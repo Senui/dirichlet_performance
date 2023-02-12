@@ -1,7 +1,9 @@
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_rng.h>
 
+#ifdef OMP_ENABLED
 #include "omp.h"
+#endif
 
 #include <algorithm>
 #include <iostream>
@@ -34,13 +36,16 @@ vector<double> GenerateRandomVector() {
 void draw() {
   vector<double> vec = GenerateRandomVector();
   gsl_rng* r_RNG = gsl_rng_alloc(gsl_rng_mt19937);
+#ifdef OMP_ENABLED
   const int num_threads = omp_get_max_threads();
-
+#else
+  const int num_threads = 1;
+#endif
   std::vector<int> sums(num_threads);
 
   using milli = std::chrono::milliseconds;
   auto start = std::chrono::high_resolution_clock::now();
-#ifdef OMP_FOO
+#ifdef OMP_ENABLED
   std::cout << "OpenMP enabled" << std::endl;
 #pragma omp parallel for
 #endif
@@ -48,7 +53,13 @@ void draw() {
     std::vector<double> results(vec.size());
     gsl_ran_dirichlet(r_RNG, vec.size(), vec.data(),
                       results.data());
-    sums[omp_get_thread_num()] = results[42];
+#ifdef OMP_ENABLED
+  const int idx = omp_get_max_threads();
+#else
+  const int idx = 0;
+#endif
+
+    sums[idx] = results[42];
   }
   auto finish = std::chrono::high_resolution_clock::now();
   std::cout << ITER << " gsl_ran_dirichlet executions took "

@@ -1,0 +1,19 @@
+cmake_minimum_required(VERSION 3.10)
+
+project(omp_dirichlet)
+
+find_package(GSL REQUIRED)
+
+set(CMAKE_CXX_STANDARD 17)
+
+# Build without OpenMP
+add_executable(dirichlet dirichlet_performance.cc)
+target_include_directories(dirichlet PRIVATE ${GSL_INCLUDE_DIRS})
+target_link_libraries(dirichlet PRIVATE ${GSL_LIBRARIES})
+
+# Build with OpenMP
+find_package(OpenMP REQUIRED)
+add_executable(dirichlet_omp dirichlet_performance.cc)
+target_include_directories(dirichlet_omp PRIVATE ${GSL_INCLUDE_DIRS})
+target_link_libraries(dirichlet_omp PRIVATE ${GSL_LIBRARIES} OpenMP::OpenMP_CXX)
+target_compile_definitions(dirichlet_omp PRIVATE OMP_ENABLED)
