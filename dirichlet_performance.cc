@@ -19,6 +19,11 @@ using namespace std;
 #define ITER 170000 * 7
 #define VEC_SIZE 380
 
+struct ThreadData {
+  int sum;
+  char padding[64];  // add padding to avoid false sharing
+};
+
 vector<double> GenerateRandomVector() {
   random_device rnd_device;
   mt19937 mersenne_engine{rnd_device()};
@@ -41,7 +46,7 @@ void draw() {
 #else
   const int num_threads = 1;
 #endif
-  std::vector<int> sums(num_threads);
+  std::vector<ThreadData> thread_data(num_threads);
 
   using milli = std::chrono::milliseconds;
   auto start = std::chrono::high_resolution_clock::now();
@@ -59,13 +64,13 @@ void draw() {
   const int idx = 0;
 #endif
 
-    sums[idx] = results[42];
+    thread_data[idx].sum = results[42];
   }
   auto finish = std::chrono::high_resolution_clock::now();
   std::cout << ITER << " gsl_ran_dirichlet executions took "
             << std::chrono::duration_cast<milli>(finish - start).count()
             << " milliseconds\n";
-  std::cout << sums[0] << std::endl;
+  std::cout << thread_data[0].sum << std::endl;
 }
 
 int main(int argc, char** argv) {
